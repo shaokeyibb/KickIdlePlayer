@@ -1,0 +1,6 @@
+#More than [players] players, plugin will start kick the player
+players: 8
+#PLayer must afk more than [max-idle-time] secs, and him will can get kick
+max-idle-time: 3600
+#The message for kick player
+kick-message: "&c您由于1小时没有活动且当前服务器繁忙，为了减轻服务器负载，您已被从服务器中移出"
