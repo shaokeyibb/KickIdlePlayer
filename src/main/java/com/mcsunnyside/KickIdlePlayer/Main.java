@@ -31,6 +31,7 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
         essentials = (Essentials)plugin;
+        Bukkit.getPluginManager().registerEvents(this,this);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
