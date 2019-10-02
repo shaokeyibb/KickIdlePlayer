@@ -15,12 +15,14 @@ public class Main extends JavaPlugin implements Listener {
     private int players = 8;
     private Essentials essentials;
     private String kickMsg;
+    private double kickTps;
     @Override
     public void onEnable() {
         saveDefaultConfig();
         max_idle_time = getConfig().getInt("max-idle-time");
         players = getConfig().getInt("players");
         kickMsg = getConfig().getString("kick-message");
+        kickTps = getConfig().getDouble("kick-tps");
         getLogger().info("KickIdlePlayer was loaded: Kick the idle more than "+max_idle_time+" when player more than "+players+".");
         kickMsg = ChatColor.translateAlternateColorCodes('&',kickMsg);
         getLogger().info("Kick msg was set to :"+kickMsg);
@@ -38,6 +40,9 @@ public class Main extends JavaPlugin implements Listener {
     public void onJoin(PlayerJoinEvent e){
         if(Bukkit.getOnlinePlayers().size() <= players){
             return; //Player not enough
+        }
+        if(essentials.getTimer().getAverageTPS() >= kickTps){
+            return; //Tps is fine
         }
         long currentTime = System.currentTimeMillis();
         long maxAllowIdleTime = max_idle_time*1000;
