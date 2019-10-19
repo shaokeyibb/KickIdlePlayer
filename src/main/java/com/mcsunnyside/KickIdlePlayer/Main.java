@@ -1,11 +1,13 @@
 package com.mcsunnyside.KickIdlePlayer;
 
 import com.earth2me.essentials.Essentials;
+import com.earth2me.essentials.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,6 +18,8 @@ public class Main extends JavaPlugin implements Listener {
     private Essentials essentials;
     private String kickMsg;
     private double kickTps;
+    private boolean kickFull;
+    private String kickFullMsg;
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -26,6 +30,8 @@ public class Main extends JavaPlugin implements Listener {
         getLogger().info("KickIdlePlayer was loaded: Kick the idle more than "+max_idle_time+" when player more than "+players+".");
         kickMsg = ChatColor.translateAlternateColorCodes('&',kickMsg);
         getLogger().info("Kick msg was set to :"+kickMsg);
+        kickFull = getConfig().getBoolean("kick-afking-players-when-server-is-full");
+        kickFullMsg = getConfig().getString("kick-afking-full-message");
         Plugin plugin = Bukkit.getPluginManager().getPlugin("Essentials");
         if(plugin == null){
             getLogger().severe("Must have EssentialsX.");
@@ -55,5 +61,19 @@ public class Main extends JavaPlugin implements Listener {
             }
         });
     }
-
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onJoin(AsyncPlayerPreLoginEvent e) {
+        if (!(Bukkit.getOnlinePlayers().size() == Bukkit.getMaxPlayers())) {
+            return; //Player not enough
+        }
+        for (User user : essentials.getOnlineUsers()) {
+            if (user.isAfk()) {
+                user.getBase().kickPlayer(kickFullMsg);
+                break;
+            }
+        }
+        if (e.getLoginResult() == AsyncPlayerPreLoginEvent.Result.KICK_FULL) {
+            e.setLoginResult(AsyncPlayerPreLoginEvent.Result.ALLOWED);
+        }
+    }
 }
