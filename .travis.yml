@@ -1,0 +1,41 @@
+language: java
+sudo: required
+jdk:
+- openjdk8
+install: false
+script:
+- export PROJECT_NAME=KickIdlePlayer
+- git clone https://$Github_token@github.com/Ghost-chu/$PROJECT_NAME.git
+- cd $PROJECT_NAME
+- mvn clean
+- mvn -T 4 install
+after_success:
+- rm -rf push
+- mkdir push
+- cp -r ./target/*.jar ./push/
+- rm -f ./target/original-*.jar
+- git clone https://$Github_token@github.com/Ghost-chu/BinaryRepository.git
+- mkdir -p ./BinaryRepository/$PROJECT_NAME/$TRAVIS_BUILD_NUMBER
+- mkdir -p ./BinaryRepository/$PROJECT_NAME/$TRAVIS_BUILD_NUMBER/target
+- cp -r ./target/* ./BinaryRepository/$PROJECT_NAME/$TRAVIS_BUILD_NUMBER/target
+- echo -e "== Built by Travis-CI ==\nBuild Number [$TRAVIS_BUILD_NUMBER]\nBuild Type
+  [$TRAVIS_EVENT_TYPE]\nTag [$TRAVIS_TAG]\nCommit [$TRAVIS_COMMIT] - [$TRAVIS_COMMIT_MESSAGE]"
+  > ./BinaryRepository/$PROJECT_NAME/$TRAVIS_BUILD_NUMBER/BUILDINFO
+- cd BinaryRepository
+- git add .
+- git commit -m "Auto update by Bot"
+- git push --force
+- cd ..
+deploy:
+  skip_cleanup: true
+  provider: releases
+  #Use travis client command line "travis setup release --force" gen the api_key and replace the secure.
+  api_key:
+    secure: H6YmlQnng7BFbELmdPZwngV1dGSrv34OvYZByWOpSm0jojfhcMtxgDCpsNtwTCeAFCUugm/EQBjMGhc5drCq5Zc5i5ZdNJlp/kOg/Ma8uPUi0FdNDR6HL0rHnGJdZxu/Wg2WjsC6Udp8TfvFYQ4mpoOsGKDwxRUr/nMuacf78918Rq6YH2bI555sgmcp1X09G/SRvwWkoEPsPOBqnpIj8nlVfcHJJH1jlWSirI35Hw4bXm0OcuWJXTZKQkWmrIqrkrzqm2UxkzUsaEAEngfIUD3WMrgZgkcFTOaduoTDmk3A2wJxKfglsVPln4jUNpW5zxmklfU+W9ZD3tgk/I00cliWLcWoGQvM3JPJ6ZaaSSalHcgkZgCbYSdmM6Hc4OEQ8dEg/2sy7D5xa+KEhMAuRjhRCR78pDNa27yP1gJCs4EnfxpO09pU6q1tm5i78V+z1fw3USaTVIHIBU6Bz3W7WM7MaFXCYxoU1XqmfoGJ++Z6PhYiu434VCZwMPcj6C6CduYlHxbm84j+JtakpAN4841E5u5SK37OsSyWQMg80NO7YgYSprmz0JG2gjhdByR4T9FF8w0rlN/GEcoWCZl3S+4XGf9R9tL7z6cKPWr+Zq6KSKTryItlBnfmiizZ7nle8ZSHvWzN8H08JvsgB+9gBOm89EKlU++vQ0P0dPqDe5Q=
+  file:
+    - ./push/*
+  file_glob: true
+  on:
+    repo: Ghost-chu/$PROJECT_NAME
+    tags: true
+  overwrite: true
