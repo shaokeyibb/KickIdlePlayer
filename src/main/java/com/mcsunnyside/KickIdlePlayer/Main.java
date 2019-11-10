@@ -29,7 +29,7 @@ public class Main extends JavaPlugin implements Listener {
         kickTps = getConfig().getDouble("kick-tps");
         getLogger().info("KickIdlePlayer was loaded: Kick the idle more than "+max_idle_time+" when player more than "+players+".");
         kickMsg = ChatColor.translateAlternateColorCodes('&',kickMsg);
-        getLogger().info("Kick msg was set to :"+kickMsg);
+        getLogger().info("Kick msg was set to:"+kickMsg);
         kickFull = getConfig().getBoolean("kick-afking-players-when-server-is-full");
         kickFullMsg = getConfig().getString("kick-afking-full-message");
         Plugin plugin = Bukkit.getPluginManager().getPlugin("Essentials");
@@ -44,7 +44,7 @@ public class Main extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent e){
-        if(Bukkit.getOnlinePlayers().size() <= players){
+        if((Bukkit.getOnlinePlayers().size() <= players) && kickFull){
             return; //Player not enough
         }
         if(essentials.getTimer().getAverageTPS() >= kickTps){
