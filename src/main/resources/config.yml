@@ -9,4 +9,4 @@ kick-message: "&cYour already 3600 secs no any actions, you was kicked from serv
 #Kick afking player when server is full
 kick-afking-players-when-server-is-full: true
 #The message for kick player when full
-kick-afking-full-message: "&cServer is full, you was kicked cause you are AFK mode."
+kick-afking-full-message: "&cServer is full, you was kicked cause you are in AFK mode."
