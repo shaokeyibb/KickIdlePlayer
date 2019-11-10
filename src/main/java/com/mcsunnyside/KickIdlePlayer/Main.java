@@ -34,7 +34,7 @@ public class Main extends JavaPlugin implements Listener {
         kickFullMsg = getConfig().getString("kick-afking-full-message");
         Plugin plugin = Bukkit.getPluginManager().getPlugin("Essentials");
         if(plugin == null){
-            getLogger().severe("Must have EssentialsX.");
+            getLogger().severe("Must have EssentialsX to run plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
