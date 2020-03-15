@@ -11,6 +11,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Main extends JavaPlugin implements Listener {
     private int max_idle_time = 600;
@@ -20,6 +21,7 @@ public class Main extends JavaPlugin implements Listener {
     private double kickTps;
     private boolean kickFull;
     private String kickFullMsg;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -27,40 +29,63 @@ public class Main extends JavaPlugin implements Listener {
         players = getConfig().getInt("players");
         kickMsg = getConfig().getString("kick-message");
         kickTps = getConfig().getDouble("kick-tps");
-        getLogger().info("KickIdlePlayer was loaded: Kick the idle more than "+max_idle_time+" when player more than "+players+".");
-        kickMsg = ChatColor.translateAlternateColorCodes('&',kickMsg);
-        getLogger().info("Kick msg was set to:"+kickMsg);
+        getLogger().info("KickIdlePlayer was loaded: Kick the idle more than " + max_idle_time + " when player more than " + players + ".");
+        kickMsg = ChatColor.translateAlternateColorCodes('&', kickMsg);
+        getLogger().info("Kick msg was set to:" + kickMsg);
         kickFull = getConfig().getBoolean("kick-afking-players-when-server-is-full");
         kickFullMsg = getConfig().getString("kick-afking-full-message");
         Plugin plugin = Bukkit.getPluginManager().getPlugin("Essentials");
-        if(plugin == null){
+        if (plugin == null) {
             getLogger().severe("Must have EssentialsX to run plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        essentials = (Essentials)plugin;
-        Bukkit.getPluginManager().registerEvents(this,this);
+        essentials = (Essentials) plugin;
+        Bukkit.getPluginManager().registerEvents(this, this);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if ((Bukkit.getOnlinePlayers().size() <= players) && kickFull) {
+                    return; //Player not enough
+                }
+                if (essentials.getTimer().getAverageTPS() >= kickTps) {
+                    return; //Tps is fine
+                }
+                long currentTime = System.currentTimeMillis();
+                long maxAllowIdleTime = max_idle_time * 1000;
+                essentials.getOnlineUsers().forEach((user) -> {
+                    if (user.isAfk()) {
+                        if ((currentTime - user.getAfkSince()) > maxAllowIdleTime) {
+                            getLogger().info("Kicking player " + user.getName() + " cause server is busying but player is idle too long time.");
+                            user.getBase().kickPlayer(kickMsg);
+                        }
+                    }
+                });
+            }
+        }.runTaskTimerAsynchronously(plugin,0,80);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onJoin(PlayerJoinEvent e){
-        if((Bukkit.getOnlinePlayers().size() <= players) && kickFull){
+    public void onJoin(PlayerJoinEvent e) {
+        if ((Bukkit.getOnlinePlayers().size() <= players) && kickFull) {
             return; //Player not enough
         }
-        if(essentials.getTimer().getAverageTPS() >= kickTps){
+        if (essentials.getTimer().getAverageTPS() >= kickTps) {
             return; //Tps is fine
         }
         long currentTime = System.currentTimeMillis();
-        long maxAllowIdleTime = max_idle_time*1000;
-        essentials.getOnlineUsers().forEach((user )->{
-            if(user.isAfk()){
-                if((currentTime - user.getAfkSince()) > maxAllowIdleTime){
-                    getLogger().info("Kicking player "+user.getName()+" cause server is busying but player is idle too long time.");
+        long maxAllowIdleTime = max_idle_time * 1000;
+        essentials.getOnlineUsers().forEach((user) -> {
+            if (user.isAfk()) {
+                if ((currentTime - user.getAfkSince()) > maxAllowIdleTime) {
+                    getLogger().info("Kicking player " + user.getName() + " cause server is busying but player is idle too long time.");
                     user.getBase().kickPlayer(kickMsg);
                 }
             }
         });
     }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(AsyncPlayerPreLoginEvent e) {
         if (!(Bukkit.getOnlinePlayers().size() == Bukkit.getMaxPlayers())) {
