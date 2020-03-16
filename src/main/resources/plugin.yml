@@ -2,3 +2,4 @@ name: KickIdlePlayer
 version: 1.0
 api-version: 1.13
 main: com.mcsunnyside.KickIdlePlayer.Main
+depend: [CMI]

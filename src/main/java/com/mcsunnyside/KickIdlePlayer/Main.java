@@ -1,9 +1,10 @@
 package com.mcsunnyside.KickIdlePlayer;
 
-import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.User;
+import com.Zrips.CMI.CMI;
+import com.Zrips.CMI.Containers.CMIUser;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -16,11 +17,11 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class Main extends JavaPlugin implements Listener {
     private int max_idle_time = 600;
     private int players = 8;
-    private Essentials essentials;
     private String kickMsg;
     private double kickTps;
     private boolean kickFull;
     private String kickFullMsg;
+    private CMI cmi;
 
     @Override
     public void onEnable() {
@@ -34,13 +35,13 @@ public class Main extends JavaPlugin implements Listener {
         getLogger().info("Kick msg was set to:" + kickMsg);
         kickFull = getConfig().getBoolean("kick-afking-players-when-server-is-full");
         kickFullMsg = getConfig().getString("kick-afking-full-message");
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("Essentials");
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("CMI");
         if (plugin == null) {
-            getLogger().severe("Must have EssentialsX to run plugin.");
+            getLogger().severe("Must have CMI to run plugin.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        essentials = (Essentials) plugin;
+        cmi = CMI.getInstance();
         Bukkit.getPluginManager().registerEvents(this, this);
 
         new BukkitRunnable() {
@@ -49,16 +50,17 @@ public class Main extends JavaPlugin implements Listener {
                 if ((Bukkit.getOnlinePlayers().size() <= players) && kickFull) {
                     return; //Player not enough
                 }
-                if (essentials.getTimer().getAverageTPS() >= kickTps) {
+                if (cmi.getLagMeter().getTPS(60) >= kickTps) {
                     return; //Tps is fine
                 }
                 long currentTime = System.currentTimeMillis();
                 long maxAllowIdleTime = max_idle_time * 1000;
-                essentials.getOnlineUsers().forEach((user) -> {
-                    if (user.isAfk()) {
-                        if ((currentTime - user.getAfkSince()) > maxAllowIdleTime) {
+                Bukkit.getOnlinePlayers().forEach((user) -> {
+                    CMIUser user2 = cmi.getPlayerManager().getUser(user);
+                    if (user2.isAfk()) {
+                        if ((currentTime - user2.getAfkInfo().getAfkFrom()) > maxAllowIdleTime) {
                             getLogger().info("Kicking player " + user.getName() + " cause server is busying but player is idle too long time.");
-                            user.getBase().kickPlayer(kickMsg);
+                            user.kickPlayer(kickMsg);
                         }
                     }
                 });
@@ -71,16 +73,17 @@ public class Main extends JavaPlugin implements Listener {
         if ((Bukkit.getOnlinePlayers().size() <= players) && kickFull) {
             return; //Player not enough
         }
-        if (essentials.getTimer().getAverageTPS() >= kickTps) {
+        if (cmi.getLagMeter().getTPS(60) >= kickTps) {
             return; //Tps is fine
         }
         long currentTime = System.currentTimeMillis();
         long maxAllowIdleTime = max_idle_time * 1000;
-        essentials.getOnlineUsers().forEach((user) -> {
-            if (user.isAfk()) {
-                if ((currentTime - user.getAfkSince()) > maxAllowIdleTime) {
+        Bukkit.getOnlinePlayers().forEach((user) -> {
+            CMIUser user2 = cmi.getPlayerManager().getUser(user);
+            if (user2.isAfk()) {
+                if ((currentTime - user2.getAfkInfo().getAfkFrom()) > maxAllowIdleTime) {
                     getLogger().info("Kicking player " + user.getName() + " cause server is busying but player is idle too long time.");
-                    user.getBase().kickPlayer(kickMsg);
+                    user.kickPlayer(kickMsg);
                 }
             }
         });
@@ -91,9 +94,10 @@ public class Main extends JavaPlugin implements Listener {
         if (!(Bukkit.getOnlinePlayers().size() == Bukkit.getMaxPlayers())) {
             return; //Player not enough
         }
-        for (User user : essentials.getOnlineUsers()) {
-            if (user.isAfk()) {
-                user.getBase().kickPlayer(kickFullMsg);
+        for (Player user : Bukkit.getOnlinePlayers()) {
+            CMIUser user2 = cmi.getPlayerManager().getUser(user);
+            if (user2.isAfk()) {
+                user.kickPlayer(kickFullMsg);
                 break;
             }
         }
